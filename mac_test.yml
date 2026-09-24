@@ -36,23 +36,23 @@ jobs:
 
       - name: 🧪 Run Decryption Execution (klink_mac private.pem app.kryptos)
         run: |
-          # 1. Force install psutil using the system python interpreter
-          python3 -m pip install --break-system-packages psutil
+          # 1. Initialize a clean, localized Virtual Environment inside the working directory
+          python3 -m venv venv
           
-          # 2. Extract the exact RAW string path (no brackets, no quotes, clean directory text)
-          RAW_SITE_PATH=$(python3 -c "import sysconfig; print(sysconfig.get_path('purelib'))")
-          echo "Discovered clean system library path: $RAW_SITE_PATH"
+          # 2. Activate the venv and install the required process monitoring library locally
+          source venv/bin/activate
+          python3 -m pip install psutil
           
-          # 3. Securely export the verified directory tree straight into the runtime space
-          export PYTHONPATH="$RAW_SITE_PATH"
+          # 3. Extract the exact localized path inside the venv project bounds
+          VENV_SITE_PATH=$(python3 -c "import sysconfig; print(sysconfig.get_path('purelib'))")
+          echo "Discovered localized venv path: $VENV_SITE_PATH"
           
-          # 4. Pass an enter character via string piping to step over the interactive pause anchor safely
+          # 4. Bridge the local path structure straight into the environment variable slots
+          export PYTHONPATH="$VENV_SITE_PATH"
+          
+          # 5. Pass an enter character via string piping to step over the interactive pause anchor safely
           echo "" | ./klink_mac private.pem app.kryptos mac/src/main.py
 
-
-          
-          # 4. Pass an enter character via string piping to step over the interactive pause anchor safely
-          echo "" | ./klink_mac private.pem app.kryptos mac/src/main.py
 
 
 
