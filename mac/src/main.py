@@ -1,40 +1,7 @@
 import sys
 import os
-
-# ======================================================================
-# CRYPTOS ZERO-TRUST SANDBOX ISOLATION BYPASS MATRIX (macOS Hardware)
-# ======================================================================
-# Dynamically extracts the active runner's toolcache and homebrew paths
-try:
-    import sysconfig
-    clean_purelib = sysconfig.get_path('purelib')
-    if clean_purelib and clean_purelib not in sys.path:
-        sys.path.append(clean_purelib)
-except Exception:
-    pass
-
-# Extract paths relative to the active running Python executable
-exe_base = os.path.dirname(os.path.dirname(sys.executable))
-mac_python_version = f"{sys.version_info.major}.{sys.version_info.minor}"
-additional_fallback_vectors = [
-    os.path.join(exe_base, "lib", f"python{mac_python_version}", "site-packages"),
-    f"/opt/homebrew/lib/python{mac_python_version}/site-packages",
-    f"/Library/Python/{mac_python_version}/site-packages",
-    os.path.expanduser(f"~/Library/Python/{mac_python_version}/lib/python/site-packages"),
-    "./venv/lib/python3.9/site-packages",  
-    "./venv/lib/python3.12/site-packages",
-    "./venv/lib/python3.13/site-packages"
-]
-
-for fallback_path in additional_fallback_vectors:
-    if os.path.exists(fallback_path) and fallback_path not in sys.path:
-        sys.path.append(fallback_path)
-
-# ======================================================================
-# STANDARD THIRD-PARTY APPLICATION IMPORTS
-# ======================================================================
 import hashlib
-import psutil  # Will now bind flawlessly from the runner's toolcache path
+import psutil  
 import requests
 import speech_recognition as sr
 from googletrans import Translator
@@ -47,8 +14,15 @@ from PyQt6.QtWidgets import QApplication
 # HEADLESS GUI ENVIRONMENT WORKAROUND
 # ======================================================================
 if "DISPLAY" not in os.environ and sys.platform == "darwin":
-    print("[Pipeline Warning] Headless environment detected. Redirecting PyQt6 display attributes...")
+    print("[Pipeline Warning] Headless cloud environment detected. Safe offscreen UI mode activated.")
     os.environ["QT_QPA_PLATFORM"] = "offscreen"
+
+print("======================================================================")
+# Your real antivirus logic starts right here...
+print("[System Core] The_Antivirus engine initialized successfully on macOS!")
+print(f"[System Core] CPU Core Counts discovered: {psutil.cpu_count()}")
+print("======================================================================")
+
 
 
 
