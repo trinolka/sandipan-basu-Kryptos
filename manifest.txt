@@ -1,4 +1,4 @@
 src/__init__.py
 src/ai.py
 src/main.py
-src/ui.pymac/src/main.py
+src/ui.py
