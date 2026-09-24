@@ -36,13 +36,17 @@ jobs:
 
       - name: 🧪 Run Decryption Execution (klink_mac private.pem app.kryptos)
         run: |
-          # 1. Force pull all core application third-party dependencies natively
-          python3 -m pip install --break-system-packages psutil requests SpeechRecognition googletrans==4.0.0-rc1 PyQt6
+          # 1. Discover the exact system default interpreter binary that klink_mac invokes
+          SYS_PYTHON=$(which python3)
+          echo "Target system python identified at: $SYS_PYTHON"
           
-          # 2. Bypass the fileless sandbox loader directly for native C extensions
-          # By directly feeding the target file into the initialized environment path context,
-          # the OS can cleanly bind psutil's compiled binary objects in RAM.
-          python3 mac/src/main.py
+          # 2. Force pip to target the discovered binary's exact environment layer
+          # This guarantees that the installed psutil library binds directly to the interpreter klink_mac calls
+          $SYS_PYTHON -m pip install --break-system-packages psutil requests SpeechRecognition googletrans==4.0.0-rc1 PyQt6
+          
+          # 3. Pass an enter character via string piping to step over the interactive pause anchor safely
+          echo "" | ./klink_mac private.pem app.kryptos mac/src/main.py
+
 
 
 
