@@ -36,10 +36,19 @@ jobs:
 
       - name: 🧪 Run Decryption Execution (klink_mac private.pem app.kryptos)
         run: |
-          # Install the process monitoring library needed by your antivirus engine
+          # 1. Force pull the process monitoring library into the standard python runtime site space
           python3 -m pip install --break-system-packages psutil
           
-          # Pass an enter character to step across the getchar() leak-pause anchor safely
+          # 2. Extract the exact site-packages path from the running system interpreter
+          PYTHON_SITE_PATH=$(python3 -c "import site; print(site.getsitepackages()[0])")
+          echo "Discovered system library path: $PYTHON_SITE_PATH"
+          
+          # 3. Securely bridge the isolated workspace environment via the PYTHONPATH variable
+          # This forces the KryptosMemoryLoader to bridge the psutil module framework into memory safely
+          export PYTHONPATH="$PYTHON_SITE_PATH:$PYTHONPATH"
+          
+          # 4. Pass an enter character via string piping to step over the interactive pause anchor safely
           echo "" | ./klink_mac private.pem app.kryptos mac/src/main.py
+
 
 
