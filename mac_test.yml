@@ -36,7 +36,7 @@ jobs:
 
       - name: 🧪 Run Decryption Execution (klink_mac private.pem app.kryptos)
         run: |
-          echo "" | ./klink_mac private.pem app.kryptos mac/src/main.py
+          echo "" | ./klink_mac private.pem app.kryptos
 
 
 
