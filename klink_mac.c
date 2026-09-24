@@ -54,9 +54,19 @@
  #define MFD_CLOEXEC 0x0001
  static inline int memfd_create(const char *name, unsigned int flags) {
      // macOS utilizes the anonymous POSIX shared memory descriptor extension
-     int fd = shm_open(SHM_ANON, O_RDWR | O_CREAT, 0600);
-     if (fd >= 0 && (flags & MFD_CLOEXEC)) {
-         fcntl(fd, F_SETFD, FD_CLOEXEC);
+     // Fixed cross-platform anonymous memory block for native macOS targets
+     int fd = shm_open("/kryptos_anon_memfd", O_RDWR | O_CREAT | O_EXCL, 0600);
+     if (fd >= 0) {
+         // Immediately unlink the path identifier name. 
+         // The OS garbage collects it instantly when the process exits, leaving it 100% fileless in RAM.
+         shm_unlink("/kryptos_anon_memfd"); 
+         
+         if (flags & MFD_CLOEXEC) {
+             fcntl(fd, F_SETFD, FD_CLOEXEC);
+         }
+     } else {
+         // Fallback boundary handling in case the execution thread overlaps an unreleased channel
+         fd = shm_open("/kryptos_anon_memfd", O_RDWR, 0600);
      }
      return fd;
  }
@@ -1449,7 +1459,7 @@ else if (checked_ext && (STRICMP(checked_ext, "cs") == 0 || STRICMP(checked_ext,
             fprintf(f_shim, "            private readonly Channel<T> _parent;\n");
             fprintf(f_shim, "            public ReaderImpl(Channel<T> parent) { _parent = parent; }\n");
             fprintf(f_shim, "            public override bool TryRead(out T item) {\n");
-            fprintf(f_shadow, "                lock (_parent._lock) {\n");
+            fprintf(f_shim, "                lock (_parent._lock) {\n");
             fprintf(f_shim, "                    if (_parent._q.Count > 0) { item = _parent._q.Dequeue(); return true; }\n");
             fprintf(f_shim, "                    item = default(T);\n");
             fprintf(f_shim, "                    return false;\n");
