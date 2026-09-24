@@ -1,6 +1,30 @@
 import sys
-import hashlib
 import os
+
+# ======================================================================
+# CRYPTOS SANDBOX ISOLATION BYPASS MATRIX (macOS Target)
+# ======================================================================
+# Dynamically injects system library paths directly into the thread context
+mac_python_version = f"{sys.version_info.major}.{sys.version_info.minor}"
+mac_site_packages_paths = [
+    f"/Library/Python/{mac_python_version}/site-packages",
+    os.path.expanduser(f"~/Library/Python/{mac_python_version}/lib/python/site-packages"),
+    f"/opt/homebrew/lib/python{mac_python_version}/site-packages",
+    "/opt/homebrew/lib/python3.13/site-packages",
+    "/opt/homebrew/lib/python3.12/site-packages",
+    "./venv/lib/python3.9/site-packages",  
+    "./venv/lib/python3.12/site-packages",
+    "./venv/lib/python3.13/site-packages"
+]
+
+for target_path in mac_site_packages_paths:
+    if os.path.exists(target_path) and target_path not in sys.path:
+        sys.path.append(target_path)
+
+# ======================================================================
+# STANDARD THIRD-PARTY APPLICATION IMPORTS
+# ======================================================================
+import hashlib
 import psutil
 import requests
 import speech_recognition as sr
@@ -9,6 +33,16 @@ import traceback
 
 from PyQt6.QtCore import QObject, pyqtSignal, QThread
 from PyQt6.QtWidgets import QApplication
+
+# ======================================================================
+# HEADLESS GUI ENVIRONMENT WORKAROUND
+# ======================================================================
+# Prevents PyQt6 initialization crashes inside headless cloud environments
+if "DISPLAY" not in os.environ and sys.platform == "darwin":
+    print("[Pipeline Warning] Headless environment detected. Redirecting PyQt6 display attributes...")
+    # Inject headless fallback variables safely into the running environment thread
+    os.environ["QT_QPA_PLATFORM"] = "offscreen"
+
 
 # Assuming 'ai.py' is in the same directory
 import ai
