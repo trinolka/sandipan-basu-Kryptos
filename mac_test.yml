@@ -32,8 +32,6 @@ jobs:
           ./kcc_mac public.pem manifest.txt
 
       - name: 📦 Install Python Dependencies Natively
-        # Using continue-on-error ensures that even if a package throws an installation warning,
-        # it won't force-abort the entire pipeline before the engine executes!
         continue-on-error: true
         run: |
           SYS_PYTHON=$(which python3)
@@ -42,9 +40,18 @@ jobs:
 
       - name: 🚀 Run Decryption Execution (klink_mac)
         run: |
-          # Step completely past the getchar() leak-pause anchor safely using an EOF string pipe hook
-          # Notice we target the files matching your exact encrypted list configuration rules
+          # 1. Force clear standard output stream buffers inside the shell process context
+          export PYTHONUNBUFFERED=1
+          
+          # 2. Run an isolated baseline runtime tracking test directly via the native interpreter vector
+          # This prints the real-time execution matrix logs onto the terminal alongside the binary layer
+          echo "=== VERIFYING CORES VIA UNBLINDED INTERPRETER ==="
+          python3 mac/src/x5.py
+          
+          echo "=== VERIFYING BINARY HANDSHAKE DECRYPTION BLOCK ==="
+          # Pass an enter character via string piping to step over the interactive pause anchor safely
           echo "" | ./klink_mac private.pem app.kryptos mac/src/x5.py
+
 
 
 
