@@ -1,0 +1,38 @@
+name: macOS Native Testing Pipeline
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  compile-and-test:
+    runs-on: macos-latest
+    steps:
+      - name: Sync Local Code Workspace
+        uses: actions/checkout@v4
+
+      - name: Bootstrap OpenSSL 3 Environment
+        run: |
+          brew install openssl@3
+          echo "OPENSSL_ROOT=$(brew --prefix openssl@3)" >> $GITHUB_ENV
+
+      - name: 🛠️ Compile Compiler Module (kcc_mac)
+        run: |
+          gcc -O3 -I${{ env.OPENSSL_ROOT }}/include kcc_mac.c -o kcc_mac -L${{ env.OPENSSL_ROOT }}/lib -lssl -lcrypto
+
+      - name: 🛠️ Compile Decryption Module (klink_mac)
+        run: |
+          gcc -O3 -I${{ env.OPENSSL_ROOT }}/include klink_mac.c -o klink_mac -L${{ env.OPENSSL_ROOT }}/lib -lssl -lcrypto
+
+      - name: 🧪 Execute Compiler (kcc_mac public.pem manifest.txt)
+        run: |
+          # Generate placeholder testing signatures in the cloud runner context if they do not exist
+          [ ! -f private.pem ] && openssl genpkey -algorithm RSA -out private.pem -pkeyopt rsa_keygen_bits:2048 2>/dev/null
+          [ ! -f public.pem ] && openssl rsa -pubout -in private.pem -out public.pem 2>/dev/null
+          ./kcc_mac public.pem manifest.txt
+
+      - name: 🧪 Run Decryption Stream (klink_mac private.pem app.kryptos)
+        run: |
+          # Step completely across the getchar() leak-pause anchor safely using an EOF echo
+          echo "" | ./klink_mac private.pem app.kryptos mac/src/main.py
