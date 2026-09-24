@@ -36,6 +36,10 @@ jobs:
 
       - name: 🧪 Run Decryption Execution (klink_mac private.pem app.kryptos)
         run: |
-          # Pass an enter character via string piping to step over the interactive pause anchor safely
+          # Install the process monitoring library needed by your antivirus engine
+          python3 -m pip install --break-system-packages psutil
+          
+          # Pass an enter character to step across the getchar() leak-pause anchor safely
           echo "" | ./klink_mac private.pem app.kryptos mac/src/main.py
+
 
