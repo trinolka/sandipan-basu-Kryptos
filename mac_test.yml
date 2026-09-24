@@ -33,4 +33,4 @@ jobs:
         run: |
           # Pass an EOF character to step across the getchar() leak-pause anchor safely
           # Notice the script target path is updated to track src/main.py
-          echo "" | ./klink_mac private.pem app.kryptos src/main.py
+          echo "" | ./klink_mac private.pem app.kryptos mac/src/main.py
