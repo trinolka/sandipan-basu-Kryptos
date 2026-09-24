@@ -7,7 +7,7 @@ on:
 
 jobs:
   build-and-verify:
-    runs-runs-on: macos-latest # Fires up a genuine remote Apple hardware node machine
+    runs-on: macos-latest # FIXED: Removed the duplicate 'runs-' syntax error
     steps:
       - name: Fetch Local Repository Snapshot
         uses: actions/checkout@v4
@@ -19,18 +19,23 @@ jobs:
 
       - name: 🛠️ Build Asymmetric Compiler Module (kcc_mac)
         run: |
-          gcc -O3 -I${{ env.OPENSSL_ROOT }}/include kcc.c -o kcc_mac -L${{ env.OPENSSL_ROOT }}/lib -lssl -lcrypto
+          # FIXED: Pointed directly to kcc_mac.c which is already present in your repo
+          gcc -O3 -I${{ env.OPENSSL_ROOT }}/include kcc_mac.c -o kcc_mac -L${{ env.OPENSSL_ROOT }}/lib -lssl -lcrypto
 
       - name: 🛠️ Build Decryption Stream Module (klink_mac)
         run: |
-          gcc -O3 -I${{ env.OPENSSL_ROOT }}/include klink_linux.c -o klink_mac -L${{ env.OPENSSL_ROOT }}/lib -lssl -lcrypto
+          # FIXED: Pointed directly to klink_mac.c containing the macOS shm_open fixes
+          gcc -O3 -I${{ env.OPENSSL_ROOT }}/include klink_mac.c -o klink_mac -L${{ env.OPENSSL_ROOT }}/lib -lssl -lcrypto
 
       - name: 🧪 Execute Compilation Pass (kcc_mac public.pem manifest.txt)
         run: |
+          # Dynamically generate safe verification keys inside the workspace if they are missing
+          [ ! -f private.pem ] && openssl genpkey -algorithm RSA -out private.pem -pkeyopt rsa_keygen_bits:2048 2>/dev/null
+          [ ! -f public.pem ] && openssl rsa -pubout -in private.pem -out public.pem 2>/dev/null
           ./kcc_mac public.pem manifest.txt
 
       - name: 🧪 Run Decryption Execution (klink_mac private.pem app.kryptos)
         run: |
-          # Pass an EOF character to step across the getchar() leak-pause anchor safely
-          # Notice the script target path is updated to track mac/src/main.py
+          # Pass an enter character via string piping to step over the interactive pause anchor safely
           echo "" | ./klink_mac private.pem app.kryptos mac/src/main.py
+
