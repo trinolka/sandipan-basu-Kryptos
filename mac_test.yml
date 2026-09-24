@@ -32,5 +32,5 @@ jobs:
       - name: 🧪 Run Decryption Execution (klink_mac private.pem app.kryptos)
         run: |
           # Pass an EOF character to step across the getchar() leak-pause anchor safely
-          # Notice the script target path is updated to track src/main.py
+          # Notice the script target path is updated to track mac/src/main.py
           echo "" | ./klink_mac private.pem app.kryptos mac/src/main.py
