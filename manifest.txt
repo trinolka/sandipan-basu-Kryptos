@@ -1,4 +1,3 @@
-mac/src/__init__.py
-mac/src/ai.py
 mac/src/main.py
-mac/src/ui.py
+mac/src/v1.py
+mac/src/v2.py
