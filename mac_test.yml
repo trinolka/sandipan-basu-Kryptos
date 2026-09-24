@@ -1,0 +1,36 @@
+name: macOS Automation Compiler Harness
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build-and-verify:
+    runs-runs-on: macos-latest # Fires up a genuine remote Apple hardware node machine
+    steps:
+      - name: Fetch Local Repository Snapshot
+        uses: actions/checkout@v4
+
+      - name: Mount and Link OpenSSL 3 SDK
+        run: |
+          brew install openssl@3
+          echo "OPENSSL_ROOT=$(brew --prefix openssl@3)" >> $GITHUB_ENV
+
+      - name: 🛠️ Build Asymmetric Compiler Module (kcc_mac)
+        run: |
+          gcc -O3 -I${{ env.OPENSSL_ROOT }}/include kcc.c -o kcc_mac -L${{ env.OPENSSL_ROOT }}/lib -lssl -lcrypto
+
+      - name: 🛠️ Build Decryption Stream Module (klink_mac)
+        run: |
+          gcc -O3 -I${{ env.OPENSSL_ROOT }}/include klink_linux.c -o klink_mac -L${{ env.OPENSSL_ROOT }}/lib -lssl -lcrypto
+
+      - name: 🧪 Execute Compilation Pass (kcc_mac public.pem manifest.txt)
+        run: |
+          ./kcc_mac public.pem manifest.txt
+
+      - name: 🧪 Run Decryption Execution (klink_mac private.pem app.kryptos)
+        run: |
+          # Pass an EOF character to step across the getchar() leak-pause anchor safely
+          # Notice the script target path is updated to track mac/main.py
+          echo "" | ./klink_mac private.pem app.kryptos mac/main.py
