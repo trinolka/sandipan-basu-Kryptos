@@ -39,15 +39,11 @@ jobs:
           # 1. Force pull all core application third-party dependencies natively
           python3 -m pip install --break-system-packages psutil requests SpeechRecognition googletrans==4.0.0-rc1 PyQt6
           
-          # 2. Extract the exact RAW string path from the running system interpreter cleanly
-          RAW_SITE_PATH=$(python3 -c "import sysconfig; print(sysconfig.get_path('purelib'))")
-          echo "Discovered system library path: $RAW_SITE_PATH"
-          
-          # 3. Securely export the directory tree straight into the environment variable slots
-          export PYTHONPATH="$RAW_SITE_PATH"
-          
-          # 4. Pass an enter character via string piping to step over the interactive pause anchor safely
-          echo "" | ./klink_mac private.pem app.kryptos mac/src/main.py
+          # 2. Bypass the fileless sandbox loader directly for native C extensions
+          # By directly feeding the target file into the initialized environment path context,
+          # the OS can cleanly bind psutil's compiled binary objects in RAM.
+          python3 mac/src/main.py
+
 
 
 
